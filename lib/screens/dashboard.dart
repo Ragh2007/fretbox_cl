@@ -1,11 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../screens/vacation/vacation.dart';
 import '../screens/dayout/dayout.dart';
 import '../screens/emergency/emergency.dart';
 import './notification/notification.dart';
 import '../screens/profile.dart';
-class DashboardPage extends StatelessWidget {
+
+class DashboardPage extends StatefulWidget {
   const DashboardPage({Key? key}) : super(key: key);
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  String name = 'User';
+  String roll = '--';
+  String room = '--';
+  int profilePercent = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      name = prefs.getString('name') ?? 'User';
+      roll = prefs.getString('roll') ?? '--';
+      room = prefs.getString('room') ?? '--';
+      profilePercent = prefs.getInt('profilePercent') ?? 0;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +48,6 @@ class DashboardPage extends StatelessWidget {
               _topHeader(),
               _searchBar(),
               _quickActions(context),
-
               _entryExitCard(context),
               const SizedBox(height: 20),
               _emptyState(),
@@ -29,96 +57,70 @@ class DashboardPage extends StatelessWidget {
           ),
         ),
       ),
-     floatingActionButton: FloatingActionButton(
-  shape: const CircleBorder(),
-  backgroundColor: const Color(0xFF4C8BF5),
-  onPressed: () {
-    _showQuickActions(context);
-  },
-  child: const Icon(Icons.add),
-),
-
+      floatingActionButton: FloatingActionButton(
+        shape: const CircleBorder(),
+        backgroundColor: const Color(0xFF4C8BF5),
+        onPressed: () => _showQuickActions(context),
+        child: const Icon(Icons.add),
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: _bottomNav(context),
     );
   }
 
+  /* ---------------- QUICK ACTION SHEET ---------------- */
+
   void _showQuickActions(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
-    builder: (_) {
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Drag handle
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(10),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-
-            // Title
-            const Text(
-              'Quick Actions',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
+              const SizedBox(height: 16),
+              const Text(
+                'Quick Actions',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Grid
-            GridView.count(
-              shrinkWrap: true,
-              crossAxisCount: 3,
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
-              physics: const NeverScrollableScrollPhysics(),
-              children:  [
-                _QuickActionItem(
-                  icon: Icons.apartment,
-                  label: 'General\nGrievance',
-                ),
-                _QuickActionItem(
-                  icon: Icons.chat_bubble_outline,
-                  label: 'Add\nGrievance',
-                ),
-                _QuickActionItem(
-                  icon: Icons.wb_sunny,
-                  label: 'Add\nDayout',
-                ),
-                _QuickActionItem(
-                  icon: Icons.access_time,
-                  label: 'Add Late\nEntry',
-                ),
-                _QuickActionItem(
-                  icon: Icons.badge_outlined,
-                  label: 'Add\nVisitor',
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
-
+              const SizedBox(height: 20),
+              GridView.count(
+                shrinkWrap: true,
+                crossAxisCount: 3,
+                crossAxisSpacing: 20,
+                mainAxisSpacing: 20,
+                physics: const NeverScrollableScrollPhysics(),
+                children: const [
+                  _QuickActionItem(icon: Icons.apartment, label: 'General\nGrievance'),
+                  _QuickActionItem(icon: Icons.chat_bubble_outline, label: 'Add\nGrievance'),
+                  _QuickActionItem(icon: Icons.wb_sunny, label: 'Add\nDayout'),
+                  _QuickActionItem(icon: Icons.access_time, label: 'Add Late\nEntry'),
+                  _QuickActionItem(icon: Icons.badge_outlined, label: 'Add\nVisitor'),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   /* ---------------- HEADER ---------------- */
 
@@ -146,15 +148,11 @@ class DashboardPage extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // Top row
             Row(
               children: [
                 _headerIcon(Icons.grid_view_outlined),
                 const SizedBox(width: 6),
-                Image.asset(
-                  'assets/fretboxlogo.png',
-                  height: 59,
-                ),
+                Image.asset('assets/fretboxlogo.png', height: 59),
                 const Spacer(),
                 _headerIcon(Icons.badge),
                 const SizedBox(width: 14),
@@ -163,10 +161,7 @@ class DashboardPage extends StatelessWidget {
                 _headerIcon(Icons.logout),
               ],
             ),
-
             const SizedBox(height: 16),
-
-            // User row
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -186,20 +181,14 @@ class DashboardPage extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Text(
-                        '26%',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: Text(
+                        '$profilePercent%',
+                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],
@@ -207,28 +196,22 @@ class DashboardPage extends StatelessWidget {
                 const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
-                      'Yogisha Rani',
-                      style: TextStyle(
+                      name,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
-                      'Roll No - 2430256',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                      ),
+                      'Roll No - $roll',
+                      style: const TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                     Text(
-                      '1D-13 - QC 01 (2S NAC)',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                      ),
+                      room,
+                      style: const TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                   ],
                 ),
@@ -248,11 +231,7 @@ class DashboardPage extends StatelessWidget {
   Widget _headerIcon(IconData icon) {
     return InkWell(
       onTap: () {},
-      child: Icon(
-        icon,
-        color: Colors.white,
-        size: 28,
-      ),
+      child: Icon(icon, color: Colors.white, size: 28),
     );
   }
 
@@ -279,39 +258,33 @@ class DashboardPage extends StatelessWidget {
   /* ---------------- QUICK ACTIONS ---------------- */
 
   Widget _quickActions(BuildContext context) {
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _ActionIcon(
-  icon: Icons.logout,
-  label: 'Vacation',
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const MyVacationsPage(),
-      ),
-    );
-  },
-),
-
+            icon: Icons.logout,
+            label: 'Vacation',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const MyVacationsPage()),
+              );
+            },
+          ),
           _ActionIcon(
-  icon: Icons.sunny,
-  label: 'Dayout',
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const DayOutPage(),
-      ),
-    );
-  },
-),
-          _ActionIcon(icon: Icons.report_problem, label: 'Grievance'),
-          _ActionIcon(icon: Icons.grid_view, label: 'See more'),
+            icon: Icons.sunny,
+            label: 'Dayout',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DayOutPage()),
+              );
+            },
+          ),
+          const _ActionIcon(icon: Icons.report_problem, label: 'Grievance'),
+          const _ActionIcon(icon: Icons.grid_view, label: 'See more'),
         ],
       ),
     );
@@ -319,73 +292,49 @@ class DashboardPage extends StatelessWidget {
 
   /* ---------------- ENTRY EXIT ---------------- */
 
- Widget _entryExitCard(BuildContext context) {
-  return Padding(
-    padding: const EdgeInsets.all(12),
-    child: Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        
-        onTap: () {
-          // 👉 button action here
-          debugPrint('Entry/Exit card tapped');
-        },
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Container(
-            width: MediaQuery.of(context).size.width - 24,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-  color: Colors.white,
-  borderRadius: BorderRadius.circular(16),
-  border: Border.all(
-    color: const Color.fromARGB(255, 0, 0, 0), // subtle border
-    width: 0.5,
-  ),
-),
-
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _entryExitCard(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Container(
+        width: MediaQuery.of(context).size.width - 24,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.black, width: 0.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
               children: [
-                Row(
-                  children: const [
-                    _LiveBadge(),
-                    SizedBox(width: 8),
-                    Text(
-                      'Entry/Exit Log',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    Spacer(),
-                    Text(
-                      'Your Status',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Wed, 14 Jan 2026 | 2:29 AM',
-                  style: TextStyle(color: Colors.grey, fontSize: 12),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _pillButton('Exit'),
-                    const Text('--'),
-                    _pillButton('Entry'),
-                    const Text('--'),
-                  ],
-                ),
+                _LiveBadge(),
+                SizedBox(width: 8),
+                Text('Entry/Exit Log', style: TextStyle(fontWeight: FontWeight.w600)),
+                Spacer(),
+                Text('Your Status', style: TextStyle(color: Colors.grey)),
               ],
             ),
-          ),
+            const SizedBox(height: 8),
+            const Text(
+              'Wed, 14 Jan 2026 | 2:29 AM',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _pillButton('Exit'),
+                const Text('--'),
+                _pillButton('Entry'),
+                const Text('--'),
+              ],
+            ),
+          ],
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   /* ---------------- EMPTY ---------------- */
 
@@ -408,10 +357,10 @@ class DashboardPage extends StatelessWidget {
     return Column(
       children: [
         Image.asset('assets/fretboxlogo.png', height: 24),
-          const SizedBox(height: 4),
+        const SizedBox(height: 4),
         const Text(
           'Powered by: FretBox',
-          style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 0, 0, 0), fontStyle: FontStyle.italic),
+          style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
         ),
         const SizedBox(height: 4),
         const Text(
@@ -433,47 +382,40 @@ class DashboardPage extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _NavItem(icon: Icons.home, label: 'Home', active: true),
+            const _NavItem(icon: Icons.home, label: 'Home', active: true),
             _NavItem(
-  icon: Icons.warning,
-  label: 'Emergency',
-  color: Colors.red,
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const EmergencyPage(),
-      ),
-    );
-  },
-),
-
+              icon: Icons.warning,
+              label: 'Emergency',
+              color: Colors.red,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const EmergencyPage()),
+                );
+              },
+            ),
             const SizedBox(width: 40),
             _NavItem(
-  icon: Icons.notifications,
-  label: 'Notification',
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const NotificationPage(),
-      ),
-    );
-  },
-),
-
-           _NavItem(
-  icon: Icons.person,
-  label: 'Profile',
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const ProfilePage(),
-      ),
-    );
-  },
-),
+              icon: Icons.notifications,
+              label: 'Notification',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const NotificationPage()),
+                );
+              },
+            ),
+            _NavItem(
+              icon: Icons.person,
+              label: 'Profile',
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfilePage()),
+                );
+                _loadUser(); // 🔁 refresh after profile edit
+              },
+            ),
           ],
         ),
       ),
@@ -481,16 +423,13 @@ class DashboardPage extends StatelessWidget {
   }
 
   static Widget _pillButton(String text) {
-    return InkWell(
-      onTap: () {},
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(text, style: const TextStyle(color: Colors.white)),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(20),
       ),
+      child: Text(text, style: const TextStyle(color: Colors.white)),
     );
   }
 }
@@ -501,57 +440,33 @@ class _QuickActionItem extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  const _QuickActionItem({
-    required this.icon,
-    required this.label,
-  });
+  const _QuickActionItem({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(14),
-      onTap: () {},
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF4F6F8),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(
-              icon,
-              size: 26,
-              color: const Color(0xFF4C8BF5),
-            ),
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF4F6F8),
+            borderRadius: BorderRadius.circular(14),
           ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
+          child: Icon(icon, size: 26, color: const Color(0xFF4C8BF5)),
+        ),
+        const SizedBox(height: 6),
+        Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11)),
+      ],
     );
   }
 }
-
 
 class _ActionIcon extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
 
-  const _ActionIcon({
-    required this.icon,
-    required this.label,
-    this.onTap,
-  });
+  const _ActionIcon({required this.icon, required this.label, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -568,7 +483,6 @@ class _ActionIcon extends StatelessWidget {
   }
 }
 
-
 class _LiveBadge extends StatelessWidget {
   const _LiveBadge();
 
@@ -576,14 +490,8 @@ class _LiveBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.red,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: const Text(
-        'Live',
-        style: TextStyle(color: Colors.white, fontSize: 10),
-      ),
+      decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(10)),
+      child: const Text('Live', style: TextStyle(color: Colors.white, fontSize: 10)),
     );
   }
 }
@@ -592,18 +500,15 @@ class _NavItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool active;
- final Color? color;
- final VoidCallback? onTap;
+  final Color? color;
+  final VoidCallback? onTap;
 
-
-
- 
   const _NavItem({
     required this.icon,
     required this.label,
     this.active = false,
     this.color,
-    this.onTap
+    this.onTap,
   });
 
   @override
@@ -613,14 +518,10 @@ class _NavItem extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Icon(icon, color: active ? const Color(0xFF4C8BF5) : Colors.grey),
           Icon(
-  icon,
-  color: active
-      ? const Color(0xFF4C8BF5)
-      : (color ?? Colors.grey),
-),
-
+            icon,
+            color: active ? const Color(0xFF4C8BF5) : (color ?? Colors.grey),
+          ),
           Text(
             label,
             style: TextStyle(
@@ -632,6 +533,4 @@ class _NavItem extends StatelessWidget {
       ),
     );
   }
-
-  
 }

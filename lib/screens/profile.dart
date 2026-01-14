@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -11,10 +12,30 @@ class _ProfilePageState extends State<ProfilePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  String name = '';
+  String phone = '';
+  String roll = '';
+  String room = '';
+  String email = '';
+  int profilePercent = 0;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      name = prefs.getString('name') ?? 'User';
+      phone = prefs.getString('phone') ?? '--';
+      roll = prefs.getString('roll') ?? '--';
+      room = prefs.getString('room') ?? '--';
+      email = prefs.getString('email') ?? '--';
+      profilePercent = prefs.getInt('profilePercent') ?? 0;
+    });
   }
 
   @override
@@ -46,7 +67,7 @@ class _ProfilePageState extends State<ProfilePage>
 
   Widget _header() {
     return Container(
-      height: 170,
+      height: 180,
       width: double.infinity,
       color: const Color(0xFF45C2F0),
       child: Column(
@@ -60,21 +81,46 @@ class _ProfilePageState extends State<ProfilePage>
                 backgroundColor: Colors.white,
                 child: Icon(Icons.person, size: 48),
               ),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: InkWell(
+                  onTap: () async {
+                    final updated = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EditProfilePage(
+                          name: name,
+                          phone: phone,
+                          roll: roll,
+                          room: room,
+                          email: email,
+                          profilePercent: profilePercent,
+                        ),
+                      ),
+                    );
+
+                    if (updated == true) {
+                      _loadUser(); // 🔁 sync after edit
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.edit, size: 18),
+                  ),
                 ),
-                child: const Icon(Icons.add, size: 18),
               ),
             ],
           ),
           const SizedBox(height: 10),
           const Text(
-            'Share FretBox',
+            'Edit Profile',
             style: TextStyle(color: Colors.white),
-          )
+          ),
         ],
       ),
     );
@@ -87,20 +133,16 @@ class _ProfilePageState extends State<ProfilePage>
       padding: const EdgeInsets.all(16),
       color: Colors.white,
       child: Column(
-        children: const [
+        children: [
           Text(
-            'Aditya Baran Sahoo',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            name,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
-          SizedBox(height: 10),
-          _InfoRow(icon: Icons.phone, text: '7325802666'),
-          _InfoRow(icon: Icons.badge, text: 'Fretbox ID : 8709'),
-          _InfoRow(
-            icon: Icons.home,
-            text: 'RESIDENT of 2B-072 (KP-25B)',
-          ),
-          _InfoRow(icon: Icons.school, text: 'KIIT University'),
-          _InfoRow(icon: Icons.email, text: '2305509@kiit.ac.in'),
+          const SizedBox(height: 10),
+          _InfoRow(icon: Icons.phone, text: phone),
+          _InfoRow(icon: Icons.badge, text: 'Roll No: $roll'),
+          _InfoRow(icon: Icons.home, text: room),
+          _InfoRow(icon: Icons.email, text: email),
         ],
       ),
     );
@@ -129,70 +171,28 @@ class _ProfilePageState extends State<ProfilePage>
   Widget _myProfileTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          _card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Profile Completeness',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 8),
-                const Text('26% Profile Completed'),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: LinearProgressIndicator(
-                    value: 0.26,
-                    minHeight: 8,
-                    backgroundColor: Colors.grey.shade300,
-                    color: const Color(0xFF4C8BF5),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text('Remaining: 14',
-                        style: TextStyle(color: Colors.blue)),
-                    Text('Updated: 6',
-                        style: TextStyle(color: Colors.grey)),
-                  ],
-                ),
-                const Divider(height: 24),
-                _docRow('Voter Card'),
-                _docRow('Driving Licence'),
-                _docRow('Antiragging Affidavit by Student'),
-              ],
+      child: _card(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Profile Completeness',
+              style: TextStyle(fontWeight: FontWeight.w600),
             ),
-          ),
-          const SizedBox(height: 16),
-          _card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  'Academic Details',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF4C8BF5),
-                  ),
-                ),
-                SizedBox(height: 10),
-                _detailRow('Course List', 'BTECH'),
-                _detailRow('Branch', 'CSE'),
-                _detailRow('Year', '3'),
-                _detailRow('Roll no', '2305509'),
-              ],
+            const SizedBox(height: 8),
+            Text('$profilePercent% Profile Completed'),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: LinearProgressIndicator(
+                value: profilePercent / 100,
+                minHeight: 8,
+                backgroundColor: Colors.grey.shade300,
+                color: const Color(0xFF4C8BF5),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          _arrowCard('Family/Personal Details'),
-          const SizedBox(height: 12),
-          _arrowCard('KYC / Documents'),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -200,10 +200,10 @@ class _ProfilePageState extends State<ProfilePage>
   /* ---------------- MY ROOM TAB ---------------- */
 
   Widget _myRoomTab() {
-    return const Center(
+    return Center(
       child: Text(
-        'My Room Details',
-        style: TextStyle(color: Colors.grey),
+        room,
+        style: const TextStyle(color: Colors.grey),
       ),
     );
   }
@@ -227,34 +227,98 @@ class _ProfilePageState extends State<ProfilePage>
       child: child,
     );
   }
+}
 
-  Widget _arrowCard(String text) {
-    return _card(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(text, style: const TextStyle(fontWeight: FontWeight.w500)),
-          const Icon(Icons.arrow_forward_ios, size: 16),
-        ],
+/* ---------------- EDIT PROFILE PAGE ---------------- */
+
+class EditProfilePage extends StatefulWidget {
+  final String name, phone, roll, room, email;
+  final int profilePercent;
+
+  const EditProfilePage({
+    super.key,
+    required this.name,
+    required this.phone,
+    required this.roll,
+    required this.room,
+    required this.email,
+    required this.profilePercent,
+  });
+
+  @override
+  State<EditProfilePage> createState() => _EditProfilePageState();
+}
+
+class _EditProfilePageState extends State<EditProfilePage> {
+  late TextEditingController nameCtrl;
+  late TextEditingController phoneCtrl;
+  late TextEditingController rollCtrl;
+  late TextEditingController roomCtrl;
+  late TextEditingController emailCtrl;
+  late TextEditingController percentCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    nameCtrl = TextEditingController(text: widget.name);
+    phoneCtrl = TextEditingController(text: widget.phone);
+    rollCtrl = TextEditingController(text: widget.roll);
+    roomCtrl = TextEditingController(text: widget.room);
+    emailCtrl = TextEditingController(text: widget.email);
+    percentCtrl =
+        TextEditingController(text: widget.profilePercent.toString());
+  }
+
+  Future<void> _save() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('name', nameCtrl.text);
+    await prefs.setString('phone', phoneCtrl.text);
+    await prefs.setString('roll', rollCtrl.text);
+    await prefs.setString('room', roomCtrl.text);
+    await prefs.setString('email', emailCtrl.text);
+    await prefs.setInt(
+        'profilePercent', int.tryParse(percentCtrl.text) ?? 0);
+
+    Navigator.pop(context, true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Edit Profile')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: ListView(
+          children: [
+            _field('Name', nameCtrl),
+            _field('Phone', phoneCtrl),
+            _field('Roll', rollCtrl),
+            _field('Room', roomCtrl),
+            _field('Email', emailCtrl),
+            _field('Profile %', percentCtrl),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _save,
+              child: const Text('Save Changes'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  static Widget _docRow(String text) {
+  Widget _field(String label, TextEditingController c) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(text),
-          const Icon(Icons.upload, color: Colors.grey),
-        ],
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextField(
+        controller: c,
+        decoration: InputDecoration(labelText: label),
       ),
     );
   }
 }
 
-/* ---------------- SMALL WIDGETS ---------------- */
+/* ---------------- SMALL WIDGET ---------------- */
 
 class _InfoRow extends StatelessWidget {
   final IconData icon;
@@ -271,26 +335,6 @@ class _InfoRow extends StatelessWidget {
           Icon(icon, size: 18, color: Colors.blue),
           const SizedBox(width: 8),
           Expanded(child: Text(text)),
-        ],
-      ),
-    );
-  }
-}
-
-class _detailRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _detailRow(this.label, this.value);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Expanded(child: Text('$label :')),
-          Text(value),
         ],
       ),
     );
