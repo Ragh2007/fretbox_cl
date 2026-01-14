@@ -3,7 +3,7 @@ import '../screens/vacation/vacation.dart';
 import '../screens/dayout/dayout.dart';
 import '../screens/emergency/emergency.dart';
 import './notification/notification.dart';
-
+import '../screens/profile.dart';
 class DashboardPage extends StatelessWidget {
   const DashboardPage({Key? key}) : super(key: key);
 
@@ -251,7 +251,7 @@ class DashboardPage extends StatelessWidget {
       child: Icon(
         icon,
         color: Colors.white,
-        size: 22,
+        size: 28,
       ),
     );
   }
@@ -462,7 +462,18 @@ class DashboardPage extends StatelessWidget {
   },
 ),
 
-            _NavItem(icon: Icons.person, label: 'Profile'),
+           _NavItem(
+  icon: Icons.person,
+  label: 'Profile',
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ProfilePage(),
+      ),
+    );
+  },
+),
           ],
         ),
       ),

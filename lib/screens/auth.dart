@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import './loading.dart';
+
 class AuthPage extends StatelessWidget {
   const AuthPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -60,7 +63,6 @@ class AuthPage extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // Phone number label
             const Text(
               'Phone Number',
               style: TextStyle(
@@ -101,7 +103,6 @@ class AuthPage extends StatelessWidget {
 
             const SizedBox(height: 4),
 
-            // Counter
             Align(
               alignment: Alignment.centerRight,
               child: Text(
@@ -115,7 +116,6 @@ class AuthPage extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // Divider text
             const Center(
               child: Text(
                 'Or, sign in with',
@@ -125,13 +125,26 @@ class AuthPage extends StatelessWidget {
 
             const SizedBox(height: 14),
 
-            // Social buttons
+            // ✅ RESPONSIVE SOCIAL BUTTONS (FIXED)
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _socialButton('assets/mail.png', 'Email'),
-                _socialButton('assets/mircosoft.png', 'Microsoft'),
-                _socialButton('assets/google.png', 'Google'),
+                _socialButton(
+                  width: (screenWidth - 56) / 3,
+                  icon: 'assets/mail.png',
+                  label: 'Email',
+                ),
+                const SizedBox(width: 8),
+                _socialButton(
+                  width: (screenWidth - 56) / 3,
+                  icon: 'assets/microsoft.png',
+                  label: 'Microsoft',
+                ),
+                const SizedBox(width: 8),
+                _socialButton(
+                  width: (screenWidth - 56) / 3,
+                  icon: 'assets/google.png',
+                  label: 'Google',
+                ),
               ],
             ),
 
@@ -143,12 +156,11 @@ class AuthPage extends StatelessWidget {
               height: 52,
               child: ElevatedButton(
                 onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(builder: (_) => const LoadingPage()),
-  );
-},
-
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LoadingPage()),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey.shade300,
                   elevation: 0,
@@ -169,7 +181,6 @@ class AuthPage extends StatelessWidget {
 
             const SizedBox(height: 14),
 
-            // Footer note
             const Center(
               child: Text(
                 'After login here, it will make you logout from other devices',
@@ -186,39 +197,39 @@ class AuthPage extends StatelessWidget {
     );
   }
 
-  static Widget _socialButton(String icon, String label) {
-    return OutlinedButton(
-      onPressed: () {},
-      style: OutlinedButton.styleFrom(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
+  // ✅ RESPONSIVE SOCIAL BUTTON
+  static Widget _socialButton({
+    required double width,
+    required String icon,
+    required String label,
+  }) {
+    return SizedBox(
+      width: width,
+      height: 44,
+      child: OutlinedButton(
+        onPressed: () {},
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          side: BorderSide(color: Colors.grey.shade300),
         ),
-        side: BorderSide(color: Colors.grey.shade300),
-      ),
-      child: Row(
-        children: [
-          Image.asset(icon, height: 18),
-          const SizedBox(width: 6),
-          Text(label),
-        ],
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(icon, height: 16),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 13),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
-
-// /// Dummy next page
-// class NextPagePlaceholder extends StatelessWidget {
-//   const NextPagePlaceholder({Key? key}) : super(key: key);
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return const Scaffold(
-//       body: Center(
-//         child: Text(
-//           'Next Page',
-//           style: TextStyle(fontSize: 22),
-//         ),
-//       ),
-//     );
-//   }
-// }
